@@ -138,7 +138,8 @@ class HrRestResource extends ResourceBase {
             ->get('entity')
             ->getString(),
           'startDate' => $p->get('field_start_date'),
-          'endDate' => $p->get('field_end_date')
+          'endDate' => $p->get('field_end_date'),
+          'target_id' => $p->id()
         ];
       }
 
@@ -155,10 +156,18 @@ class HrRestResource extends ResourceBase {
     }
     else {
       if ($query === 'all') {
+
+        $start      = \Drupal::request()->query->get('start');
+        $end        = \Drupal::request()->query->get('end');
+        $taxonomyId = \Drupal::request()->query->get('taxonomy');
+
+
         $paragraphNew     = [];
         $paragraphCreated = Paragraph::create([
           'type' => 'leave',
-          'field_leave_category' => ['target_id' => 2]
+          'field_leave_category' => ['target_id' => $taxonomyId],
+          'field_start_date' => $start,
+          'field_end_date' => $end,
         ]);
         $paragraphCreated->save();
 
@@ -181,33 +190,67 @@ class HrRestResource extends ResourceBase {
         $user->save();
       }
       else {
-//        $leaveParagraphs = [];
-//
-//        $paragraph = Paragraph::create(['type' => 'leave']);
-//        $paragraph->set('field_message', 'some text');
-//
-//        $paragraph->save();
-//
-//        $leaveParagraphs[] = [
-//          'target_id' => $paragraph->id(),
-//          'target_revision_id' => $paragraph->getRevisionId(),
-//        ];
-//
-//        $user->set('field_leave', $leaveParagraphs);
-//        $user->save();
+        if ($query === 'delete') {
+          $pid = \Drupal::request()->query->get('pid');
+
+          $paragraphsUpdated = [];
+
+
+          foreach ($paragraphs as $item) {
+            $p = \Drupal\paragraphs\Entity\Paragraph::load($item['target_id']);
+
+            if ($p->id() != $pid) {
+              $paragraphsUpdated[] = [
+                'target_id' => $p->id(),
+                'target_revision_id' => $p->getRevisionId(),
+              ];
+            }
+
+          }
+          $user->set('field_leave', $paragraphsUpdated);
+          $user->save();
+
+          $paragraphs = $user->field_leave->getValue();
+
+          $pData = [];
+
+          foreach ($paragraphs as $item) {
+            $p = \Drupal\paragraphs\Entity\Paragraph::load($item['target_id']);
+
+
+            $pData[] = [
+              'name' => $p->get('field_message'),
+              'selectedCategory' => $p->get('field_leave_category')
+                ->get(0)
+                ->get('entity')
+                ->getString(),
+              'startDate' => $p->get('field_start_date'),
+              'endDate' => $p->get('field_end_date'),
+              'target_id' => $p->id()
+            ];
+          }
+
+
+        }
       }
     }
 
-
-    $response = [
-      'message' => 'Hello, this is a restkljlkj service',
-      'user' => $this->currentUser->getAccountName(),
-      'query' => $query,
-      'terms' => $termData,
-      'leaveUserList' => $pData,
-      'leaveNew' => $leaveNew,
-      'para' => $paragraphNew
-    ];
+    if ($query != 'delete') {
+      $response = [
+        'message' => 'Hello, this is a restkljlkj service',
+        'user' => $this->currentUser->getAccountName(),
+        'query' => $query,
+        'terms' => $termData,
+        'leaveUserList' => $pData,
+        'leaveNew' => $leaveNew,
+        'para' => $paragraphNew
+      ];
+    }
+    else {
+      $response = [
+        'updated' => $pData
+      ];
+    }
 
     $build = array(
       '#cache' => array(
