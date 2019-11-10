@@ -1,0 +1,35 @@
+<?php
+
+/**
+ * @file
+ * Contains rest_resource_hr.module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function rest_resource_hr_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the rest_resource_hr module.
+    case 'help.page.rest_resource_hr':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('My Awesome Module') . '</p>';
+      return $output;
+
+    default:
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function rest_resource_hr_theme() {
+  return [
+    'rest_resource_hr' => [
+      'render element' => 'children',
+    ],
+  ];
+}
