@@ -127,27 +127,13 @@ class HrRestResource extends ResourceBase {
         ];
       }
 
-      $paragraphNew     = [];
-      $paragraphCreated = Paragraph::create([
-        'type' => 'leave',
-        'field_leave_category' => ['target_id' => 2]
-      ]);
-//      $paragraphCreated->set('field_message', 'some text')text;
-      $paragraphCreated->save();
-
-
       foreach ($paragraphs as $item) {
         $p = \Drupal\paragraphs\Entity\Paragraph::load($item['target_id']);
 
 
-//        $paragraphNew[] = [
-//          'target_id' => $p->id(),
-//          'target_revision_id' => $p->getRevisionId(),
-//        ];
-
         $pData[] = [
           'name' => $p->get('field_message'),
-          'leaveUserList' => $p->get('field_leave_category')
+          'selectedCategory' => $p->get('field_leave_category')
             ->get(0)
             ->get('entity')
             ->getString(),
@@ -155,15 +141,6 @@ class HrRestResource extends ResourceBase {
           'endDate' => $p->get('field_end_date')
         ];
       }
-
-      $paragraphNew[] = [
-        'target_id' => $paragraphCreated->id(),
-        'target_revision_id' => $paragraphCreated->getRevisionId(),
-      ];
-
-
-      $user->set('field_leave', $paragraphNew);
-      $user->save();
 
       $vid   = 'leave_categories';
       $terms = \Drupal::entityTypeManager()
@@ -177,20 +154,48 @@ class HrRestResource extends ResourceBase {
       }
     }
     else {
-      $leaveParagraphs = [];
+      if ($query === 'all') {
+        $paragraphNew     = [];
+        $paragraphCreated = Paragraph::create([
+          'type' => 'leave',
+          'field_leave_category' => ['target_id' => 2]
+        ]);
+        $paragraphCreated->save();
 
-      $paragraph = Paragraph::create(['type' => 'leave']);
-      $paragraph->set('field_message', 'some text');
+        foreach ($paragraphs as $item) {
+          $p = \Drupal\paragraphs\Entity\Paragraph::load($item['target_id']);
 
-      $paragraph->save();
 
-      $leaveParagraphs[] = [
-        'target_id' => $paragraph->id(),
-        'target_revision_id' => $paragraph->getRevisionId(),
-      ];
+          $paragraphNew[] = [
+            'target_id' => $p->id(),
+            'target_revision_id' => $p->getRevisionId(),
+          ];
 
-      $user->set('field_leave', $leaveParagraphs);
-      $user->save();
+        }
+        $paragraphNew[] = [
+          'target_id' => $paragraphCreated->id(),
+          'target_revision_id' => $paragraphCreated->getRevisionId(),
+        ];
+
+        $user->set('field_leave', $paragraphNew);
+        $user->save();
+      }
+      else {
+//        $leaveParagraphs = [];
+//
+//        $paragraph = Paragraph::create(['type' => 'leave']);
+//        $paragraph->set('field_message', 'some text');
+//
+//        $paragraph->save();
+//
+//        $leaveParagraphs[] = [
+//          'target_id' => $paragraph->id(),
+//          'target_revision_id' => $paragraph->getRevisionId(),
+//        ];
+//
+//        $user->set('field_leave', $leaveParagraphs);
+//        $user->save();
+      }
     }
 
 
