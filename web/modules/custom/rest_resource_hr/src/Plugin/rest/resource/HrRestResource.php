@@ -102,7 +102,7 @@ class HrRestResource extends ResourceBase {
       ),
     );
 
-    $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+    $user = \Drupal\user\Entity\User::load(1);
 
 
     $query = \Drupal::request()->query->get('type');
