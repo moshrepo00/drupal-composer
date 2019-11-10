@@ -120,24 +120,51 @@ class HrRestResource extends ResourceBase {
         // $p       = \Drupal\paragraphs\Entity\Paragraph::load($item['target_id']);
         $leaveNew[] = [
           'name' => $p->get('field_message'),
-          'reason' => $p->get('field_leave_category')
+          'selectedDate' => $p->get('field_leave_category')
             ->get(0)
             ->get('entity')
             ->getString()
         ];
       }
 
+      $paragraphNew     = [];
+      $paragraphCreated = Paragraph::create([
+        'type' => 'leave',
+        'field_leave_category' => ['target_id' => 2]
+      ]);
+//      $paragraphCreated->set('field_message', 'some text')text;
+      $paragraphCreated->save();
+
+
       foreach ($paragraphs as $item) {
-        $p       = \Drupal\paragraphs\Entity\Paragraph::load($item['target_id']);
+        $p = \Drupal\paragraphs\Entity\Paragraph::load($item['target_id']);
+
+
+//        $paragraphNew[] = [
+//          'target_id' => $p->id(),
+//          'target_revision_id' => $p->getRevisionId(),
+//        ];
+
         $pData[] = [
           'name' => $p->get('field_message'),
-          'reason' => $p->get('field_leave_category')
+          'leaveUserList' => $p->get('field_leave_category')
             ->get(0)
             ->get('entity')
             ->getString(),
-          'startDate' => $p->get('field_start_date')
+          'startDate' => $p->get('field_start_date'),
+          'endDate' => $p->get('field_end_date')
         ];
       }
+
+      $paragraphNew[] = [
+        'target_id' => $paragraphCreated->id(),
+        'target_revision_id' => $paragraphCreated->getRevisionId(),
+      ];
+
+
+      $user->set('field_leave', $paragraphNew);
+      $user->save();
+
       $vid   = 'leave_categories';
       $terms = \Drupal::entityTypeManager()
         ->getStorage('taxonomy_term')
@@ -172,9 +199,17 @@ class HrRestResource extends ResourceBase {
       'user' => $this->currentUser->getAccountName(),
       'query' => $query,
       'terms' => $termData,
-      'leaveTest' => $pData,
-      'leaveNew' => $leaveNew
+      'leaveUserList' => $pData,
+      'leaveNew' => $leaveNew,
+      'para' => $paragraphNew
     ];
+
+    $build = array(
+      '#cache' => array(
+        'max-age' => 0,
+      ),
+    );
+
     return (new ResourceResponse($response))->addCacheableDependency($build);
 
   }
